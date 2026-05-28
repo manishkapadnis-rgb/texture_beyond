@@ -163,6 +163,53 @@ function logo_url(){
     if (!empty($s['logo'])) return UPLOAD_URL . '/site/' . $s['logo'];
     return null;
 }
+function product_gallery($p){
+    $imgs = [];
+    if (!empty($p['image'])) $imgs[] = product_image($p['image']);
+    if (!empty($p['gallery'])){
+        foreach (preg_split('/[,\n]+/', $p['gallery']) as $g){
+            $g = trim($g);
+            if ($g !== '') $imgs[] = product_image($g);
+        }
+    }
+    return array_values(array_unique($imgs));
+}
+
+function product_sizes($pid){
+    global $conn;
+    $pid = (int)$pid;
+    $rows = [];
+    $r = @$conn->query("SELECT value, stock FROM product_variants WHERE product_id=$pid AND name='size' ORDER BY id");
+    if ($r) while ($row = $r->fetch_assoc()) $rows[] = $row;
+    return $rows;
+}
+
+function product_reviews($pid){
+    global $conn;
+    $pid = (int)$pid;
+    $rows = [];
+    $r = @$conn->query("SELECT * FROM reviews WHERE product_id=$pid AND status=1 ORDER BY id DESC");
+    if ($r) while ($row = $r->fetch_assoc()) $rows[] = $row;
+    return $rows;
+}
+
+function review_summary($pid){
+    global $conn;
+    $pid = (int)$pid;
+    $sum = ['count'=>0, 'avg'=>0, 'breakdown'=>[5=>0,4=>0,3=>0,2=>0,1=>0]];
+    $r = @$conn->query("SELECT rating, COUNT(*) c FROM reviews WHERE product_id=$pid AND status=1 GROUP BY rating");
+    if (!$r) return $sum;
+    $total = 0; $weighted = 0;
+    while ($row = $r->fetch_assoc()){
+        $rt = (int)$row['rating']; $c = (int)$row['c'];
+        if (isset($sum['breakdown'][$rt])) $sum['breakdown'][$rt] = $c;
+        $total += $c; $weighted += $rt * $c;
+    }
+    $sum['count'] = $total;
+    $sum['avg'] = $total ? round($weighted / $total, 2) : 0;
+    return $sum;
+}
+
 function send_admin_notification($subject, $body){
     $s = setting();
     $to = $s['email'] ?? 'admin@texturenbeyond.com';
