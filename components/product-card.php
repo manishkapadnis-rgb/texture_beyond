@@ -19,7 +19,7 @@
       <?php endif; ?>
     </div>
   </a>
-  <form class="add-to-cart-form flex items-center justify-between gap-3" data-product-id="<?= (int)$p['id'] ?>">
+  <form action="<?= url('cart-action.php') ?>" method="post" class="add-to-cart-form flex items-center justify-between gap-3" data-product-id="<?= (int)$p['id'] ?>">
     <input type="hidden" name="action" value="add"/>
     <input type="hidden" name="id" value="<?= (int)$p['id'] ?>"/>
     <input type="hidden" name="qty" value="1"/>

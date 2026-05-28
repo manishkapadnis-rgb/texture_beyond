@@ -40,7 +40,7 @@ include 'includes/header.php';
           <?php if ($p['material']): ?><div><div class="font-label-caps text-label-caps text-secondary mb-2">Material</div><div class="font-body-md"><?= e($p['material']) ?></div></div><?php endif; ?>
         </div>
 
-        <form class="add-to-cart-form flex items-center gap-4" data-product-id="<?= (int)$p['id'] ?>">
+        <form action="<?= url('cart-action.php') ?>" method="post" class="add-to-cart-form flex items-center gap-4" data-product-id="<?= (int)$p['id'] ?>">
           <input type="hidden" name="action" value="add">
           <input type="hidden" name="id" value="<?= (int)$p['id'] ?>">
           <div class="flex items-center border border-primary rounded-sm overflow-hidden bg-surface-container-lowest">
@@ -77,7 +77,7 @@ include 'includes/header.php';
               <h3 class="font-display-md text-[20px] mb-1"><?= e($r['name']) ?></h3>
               <span class="font-body-md font-semibold"><?= money($r['sale_price'] ?: $r['price']) ?></span>
             </a>
-            <form class="add-to-cart-form mt-4 flex items-center justify-between gap-3" data-product-id="<?= (int)$r['id'] ?>">
+            <form action="<?= url('cart-action.php') ?>" method="post" class="add-to-cart-form mt-4 flex items-center justify-between gap-3" data-product-id="<?= (int)$r['id'] ?>">
               <input type="hidden" name="action" value="add"/>
               <input type="hidden" name="id" value="<?= (int)$r['id'] ?>"/>
               <input type="hidden" name="qty" value="1"/>
