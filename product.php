@@ -12,7 +12,7 @@ $gallery  = product_gallery($p);
 $sizes    = product_sizes($p['id']);
 $reviews  = product_reviews($p['id']);
 $rsum     = review_summary($p['id']);
-$sold_recent = 4 + (crc32($p['slug']) % 14);
+$sold_recent = 4 + (abs(crc32((string)$p['slug'])) % 14);
 include 'includes/header.php';
 ?>
 <section class="pt-32 pb-16 px-margin-mobile md:px-margin-desktop bg-surface pdp">
