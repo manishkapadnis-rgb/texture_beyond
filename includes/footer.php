@@ -64,21 +64,44 @@ $s = setting();
 
 <div id="cart-overlay" class="cart-overlay" aria-hidden="true"></div>
 <aside id="mini-cart-drawer" class="mini-cart-drawer" aria-label="Shopping cart drawer" aria-hidden="true">
-  <div class="mini-cart-header">
-    <div>
-      <p class="font-label-caps text-label-caps text-secondary">Your Cart</p>
-      <h3 class="font-display-md text-headline-md">Shopping Bag</h3>
+  <header class="mini-cart-header">
+    <h3 class="mini-cart-title">Shopping Cart <span class="mini-cart-count">(<span id="mini-cart-count-num">0</span>)</span></h3>
+    <button type="button" id="close-cart-drawer" class="mini-cart-close" aria-label="Close cart">
+      <span class="material-symbols-outlined">close</span>
+    </button>
+  </header>
+
+  <div class="mini-cart-shipping" id="mini-cart-shipping">
+    <div class="ship-track">
+      <div class="ship-fill" id="ship-fill" style="width:0%"></div>
+      <span class="ship-icon" id="ship-icon"><span class="material-symbols-outlined">local_shipping</span></span>
     </div>
-    <button type="button" id="close-cart-drawer" class="material-symbols-outlined text-primary" aria-label="Close cart">close</button>
+    <p class="ship-msg" id="ship-msg">Add items to unlock free shipping.</p>
   </div>
+
   <div id="mini-cart-items" class="mini-cart-items custom-scrollbar"></div>
-  <div class="mini-cart-footer">
-    <div class="flex items-center justify-between text-on-surface-variant mb-3"><span>Subtotal</span><strong id="mini-cart-subtotal">₹0</strong></div>
-    <div class="flex gap-3">
-      <a href="<?= url('cart.php') ?>" class="btn-ghost flex-1 text-center">View Cart</a>
-      <a href="<?= url('checkout.php') ?>" class="btn-primary flex-1 text-center">Checkout</a>
-    </div>
+
+  <div class="mini-cart-tabs" role="tablist" aria-label="Cart extras">
+    <button type="button" class="mini-cart-tab" data-tab="note" aria-label="Add order note">
+      <span class="material-symbols-outlined">edit_note</span>
+    </button>
+    <button type="button" class="mini-cart-tab" data-tab="coupon" aria-label="Apply discount">
+      <span class="material-symbols-outlined">local_offer</span>
+    </button>
   </div>
+
+  <footer class="mini-cart-footer">
+    <div class="mini-cart-subtotal">
+      <span class="label">Subtotal</span>
+      <strong id="mini-cart-subtotal">₹0</strong>
+    </div>
+    <label class="mini-cart-terms">
+      <input type="checkbox" id="mini-cart-terms" />
+      <span>I agree with <a href="<?= url('page.php?slug=terms') ?>" target="_blank">Terms &amp; Conditions</a></span>
+    </label>
+    <a href="<?= url('cart.php') ?>" class="mini-cart-btn mini-cart-btn--outline">View Cart</a>
+    <a href="<?= url('checkout.php') ?>" class="mini-cart-btn mini-cart-btn--solid" id="mini-cart-checkout" aria-disabled="false">Checkout</a>
+  </footer>
 </aside>
 
 <div id="toast-stack" class="toast-stack" aria-live="polite" aria-atomic="true"></div>

@@ -72,6 +72,11 @@
     const itemsEl = document.getElementById('mini-cart-items');
     const subtotalEl = document.getElementById('mini-cart-subtotal');
     const badgeEl = document.getElementById('cart-count-badge');
+    const countNumEl = document.getElementById('mini-cart-count-num');
+    const shipFillEl = document.getElementById('ship-fill');
+    const shipMsgEl = document.getElementById('ship-msg');
+    const termsEl = document.getElementById('mini-cart-terms');
+    const checkoutBtn = document.getElementById('mini-cart-checkout');
 
     function escapeHtml(s) {
       return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({
@@ -105,7 +110,7 @@
           '</a>' +
           '<div class="mini-cart-item__body">' +
             '<a class="mini-cart-item__title" href="' + it.url + '">' + escapeHtml(it.name) + '</a>' +
-            '<div class="mini-cart-item__price">' + it.price_html + '</div>' +
+            '<div class="mini-cart-item__price">' + it.line_html + '</div>' +
             '<div class="qty-wrap" role="group" aria-label="Quantity">' +
               '<button type="button" class="qty-btn" data-cart-action="dec" aria-label="Decrease">−</button>' +
               '<span class="qty-val">' + it.qty + '</span>' +
@@ -113,8 +118,8 @@
             '</div>' +
           '</div>' +
           '<div class="mini-cart-item__right">' +
-            '<button type="button" class="mini-cart-item__remove material-symbols-outlined" data-cart-remove aria-label="Remove item">delete</button>' +
-            '<strong class="mini-cart-item__line">' + it.line_html + '</strong>' +
+            '<a href="' + it.url + '" class="mini-cart-item__edit" aria-label="Edit item"><span class="material-symbols-outlined">edit</span></a>' +
+            '<button type="button" class="mini-cart-item__remove" data-cart-remove aria-label="Remove item"><span class="material-symbols-outlined">delete</span></button>' +
           '</div>' +
         '</article>'
       )).join('');
@@ -123,9 +128,37 @@
     function applyState(data) {
       if (!data) return;
       updateBadge(data.count);
+      if (countNumEl) countNumEl.textContent = data.count || 0;
       if (data.items) renderItems(data.items);
       if (subtotalEl && data.subtotal_html) subtotalEl.textContent = data.subtotal_html;
+      if (shipFillEl) {
+        const pct = Math.max(0, Math.min(100, Number(data.free_shipping_progress || 0)));
+        shipFillEl.style.width = pct + '%';
+      }
+      if (shipMsgEl) {
+        if (data.free_shipping_threshold > 0) {
+          shipMsgEl.innerHTML = data.free_shipping_unlocked
+            ? "Congratulations! You've got <strong>free shipping</strong>!"
+            : 'Spend <strong>' + data.free_shipping_remaining_html + '</strong> more for free shipping.';
+        } else {
+          shipMsgEl.textContent = 'Add a signature piece to begin.';
+        }
+      }
+      syncCheckoutGate();
     }
+
+    function syncCheckoutGate() {
+      if (!checkoutBtn) return;
+      const requireTerms = termsEl && !termsEl.checked;
+      checkoutBtn.setAttribute('aria-disabled', requireTerms ? 'true' : 'false');
+    }
+    if (termsEl) termsEl.addEventListener('change', syncCheckoutGate);
+    if (checkoutBtn) checkoutBtn.addEventListener('click', (e) => {
+      if (checkoutBtn.getAttribute('aria-disabled') === 'true') {
+        e.preventDefault();
+        Toast.show('Please agree to the Terms & Conditions.', 'error');
+      }
+    });
 
     function pulseBadge() {
       if (!badgeEl || !window.gsap) return;

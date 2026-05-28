@@ -71,6 +71,14 @@ if ($is_ajax) {
     $response['items']         = $payload_items;
     $response['cart_url']      = url('cart.php');
     $response['checkout_url']  = url('checkout.php');
+    $s = setting();
+    $free_above = (float)($s['free_shipping_above'] ?? 0);
+    $response['free_shipping_threshold']      = $free_above;
+    $response['free_shipping_threshold_html'] = money($free_above);
+    $response['free_shipping_remaining']      = max(0, $free_above - $subtotal);
+    $response['free_shipping_remaining_html'] = money(max(0, $free_above - $subtotal));
+    $response['free_shipping_progress']       = $free_above > 0 ? min(100, ($subtotal / $free_above) * 100) : 100;
+    $response['free_shipping_unlocked']       = $free_above > 0 && $subtotal >= $free_above;
 
     header('Content-Type: application/json');
     echo json_encode($response);
