@@ -1,5 +1,9 @@
 <?php
 require_once 'includes/functions.php';
+if (!is_logged_in()) {
+    flash('error', 'Please login to checkout.');
+    redirect(url('login.php?return=' . urlencode(url('checkout.php'))));
+}
 $items = cart_items();
 if (!$items) redirect(url('cart.php'));
 

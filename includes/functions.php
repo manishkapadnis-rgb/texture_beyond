@@ -188,8 +188,13 @@ function product_reviews($pid){
     global $conn;
     $pid = (int)$pid;
     $rows = [];
-    $r = @$conn->query("SELECT * FROM reviews WHERE product_id=$pid AND status=1 ORDER BY id DESC");
-    if ($r) while ($row = $r->fetch_assoc()) $rows[] = $row;
+    $r = @$conn->query("SELECT * FROM reviews WHERE product_id=$pid AND status='approved' ORDER BY id DESC");
+    if ($r) while ($row = $r->fetch_assoc()){
+        $row['images'] = [];
+        $ri = @$conn->query("SELECT image FROM review_images WHERE review_id=" . (int)$row['id'] . " ORDER BY sort_order");
+        if ($ri) while ($im = $ri->fetch_assoc()) $row['images'][] = $im['image'];
+        $rows[] = $row;
+    }
     return $rows;
 }
 
@@ -197,7 +202,7 @@ function review_summary($pid){
     global $conn;
     $pid = (int)$pid;
     $sum = ['count'=>0, 'avg'=>0, 'breakdown'=>[5=>0,4=>0,3=>0,2=>0,1=>0]];
-    $r = @$conn->query("SELECT rating, COUNT(*) c FROM reviews WHERE product_id=$pid AND status=1 GROUP BY rating");
+    $r = @$conn->query("SELECT rating, COUNT(*) c FROM reviews WHERE product_id=$pid AND status='approved' GROUP BY rating");
     if (!$r) return $sum;
     $total = 0; $weighted = 0;
     while ($row = $r->fetch_assoc()){
@@ -208,6 +213,65 @@ function review_summary($pid){
     $sum['count'] = $total;
     $sum['avg'] = $total ? round($weighted / $total, 2) : 0;
     return $sum;
+}
+
+function user_purchased_product($uid, $pid){
+    global $conn;
+    $uid = (int)$uid; $pid = (int)$pid;
+    if (!$uid || !$pid) return null;
+    $r = @$conn->query("SELECT o.id FROM orders o INNER JOIN order_items oi ON oi.order_id=o.id WHERE o.user_id=$uid AND oi.product_id=$pid AND o.status IN ('processing','shipped','delivered') ORDER BY o.id DESC LIMIT 1");
+    if ($r && $row = $r->fetch_assoc()) return (int)$row['id'];
+    return null;
+}
+
+function user_review_for($uid, $pid){
+    global $conn;
+    $uid = (int)$uid; $pid = (int)$pid;
+    if (!$uid || !$pid) return null;
+    $r = @$conn->query("SELECT * FROM reviews WHERE user_id=$uid AND product_id=$pid LIMIT 1");
+    return $r ? $r->fetch_assoc() : null;
+}
+
+function user_initials($name){
+    $name = trim((string)$name);
+    if ($name === '') return '?';
+    $parts = preg_split('/\s+/', $name);
+    $s = strtoupper(substr($parts[0], 0, 1));
+    if (isset($parts[1])) $s .= strtoupper(substr($parts[1], 0, 1));
+    return $s;
+}
+
+function ensure_review_tables(){
+    global $conn;
+    @$conn->query("CREATE TABLE IF NOT EXISTS `reviews` (
+      `id` INT AUTO_INCREMENT PRIMARY KEY,
+      `product_id` INT NOT NULL,
+      `user_id` INT NOT NULL,
+      `order_id` INT DEFAULT NULL,
+      `name` VARCHAR(120) NOT NULL,
+      `email` VARCHAR(190) DEFAULT NULL,
+      `rating` TINYINT NOT NULL DEFAULT 5,
+      `title` VARCHAR(190) DEFAULT NULL,
+      `body` TEXT NOT NULL,
+      `verified` TINYINT(1) NOT NULL DEFAULT 0,
+      `status` ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
+      `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE KEY `uq_user_product` (`user_id`, `product_id`),
+      KEY `idx_rev_product` (`product_id`),
+      KEY `idx_rev_status` (`status`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    @$conn->query("CREATE TABLE IF NOT EXISTS `review_images` (
+      `id` INT AUTO_INCREMENT PRIMARY KEY,
+      `review_id` INT NOT NULL,
+      `image` VARCHAR(190) NOT NULL,
+      `sort_order` INT DEFAULT 0,
+      KEY `idx_ri_review` (`review_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    // Best-effort schema upgrade for legacy reviews table created by older deploy
+    @$conn->query("ALTER TABLE `reviews` ADD COLUMN `order_id` INT DEFAULT NULL");
+    @$conn->query("ALTER TABLE `reviews` ADD COLUMN `verified` TINYINT(1) NOT NULL DEFAULT 0");
+    @$conn->query("ALTER TABLE `reviews` MODIFY `status` ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending'");
+    @$conn->query("ALTER TABLE `reviews` ADD UNIQUE KEY `uq_user_product` (`user_id`, `product_id`)");
 }
 
 function send_admin_notification($subject, $body){

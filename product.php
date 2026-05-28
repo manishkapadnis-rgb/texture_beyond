@@ -72,10 +72,15 @@ if (!$p){ http_response_code(404); echo 'Not Found'; exit; }
 $page_title = ($p['meta_title'] ?: $p['name']) . ' | Texture & Beyond';
 $meta_description = $p['meta_description'] ?: $p['short_description'];
 $related = $conn->query("SELECT * FROM products WHERE status=1 AND category_id={$p['category_id']} AND id<>{$p['id']} LIMIT 4");
+if (function_exists('ensure_review_tables')) ensure_review_tables();
 $gallery  = product_gallery($p);
 $sizes    = product_sizes($p['id']);
 $reviews  = product_reviews($p['id']);
 $rsum     = review_summary($p['id']);
+$cu       = current_user();
+$has_purchased = $cu ? user_purchased_product($cu['id'], $p['id']) : null;
+$existing_review = $cu ? user_review_for($cu['id'], $p['id']) : null;
+$return_url = url('product.php?slug=' . $p['slug']);
 $sold_recent = 4 + (abs(crc32((string)$p['slug'])) % 14);
 include 'includes/header.php';
 ?>
@@ -187,6 +192,16 @@ include 'includes/header.php';
 .pdp-review__body{font-size:14px;line-height:1.6;color:#1a1a1a;margin:0 0 10px}
 .pdp-review__photo{display:inline-block;width:80px;height:80px;border-radius:6px;overflow:hidden;border:1px solid rgba(0,0,0,.1)}
 .pdp-review__photo img{width:100%;height:100%;object-fit:cover}
+.pdp-review__photos{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.pdp-review__avatar--initials{font-size:13px;font-weight:700;letter-spacing:.04em;color:#fff;background:#1a1a1a}
+.pdp-review__user-meta{display:flex;flex-direction:column;gap:2px}
+.pdp-verified-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:#1d7a5c;background:rgba(29,122,92,.08);padding:3px 8px;border-radius:999px;width:fit-content;letter-spacing:.02em}
+.pdp-verified-badge .material-symbols-outlined{font-size:14px}
+.pdp-verified-badge--sm{font-size:10px;padding:2px 7px}
+.pdp-review-gate{display:inline-flex;align-items:center;font-size:12px;color:#7a3a3a;background:#fff;border:1px dashed rgba(122,58,58,.4);padding:10px 16px;border-radius:999px}
+.pdp-review-gate--ok{color:#1d7a5c;border-color:rgba(29,122,92,.4);background:rgba(29,122,92,.06)}
+.pdp-review-form__head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+.pdp-review-form__as{font-size:12px;color:#6b6b6b}
 </style>
 <section class="pt-32 pb-16 px-margin-mobile md:px-margin-desktop bg-surface pdp">
   <div class="max-w-container-max mx-auto">
@@ -349,28 +364,40 @@ include 'includes/header.php';
           <?php endfor; ?>
         </div>
         <div class="pdp-reviews__write">
-          <button type="button" class="pdp-btn pdp-btn--outline-maroon" id="pdp-write-review">Write a review</button>
+          <?php if (!$cu): ?>
+            <a href="<?= e(url('login.php?return=' . urlencode($return_url))) ?>" class="pdp-btn pdp-btn--outline-maroon">Login to write a review</a>
+          <?php elseif ($existing_review): ?>
+            <span class="pdp-review-gate pdp-review-gate--ok">✓ You reviewed this product</span>
+          <?php elseif ($has_purchased): ?>
+            <button type="button" class="pdp-btn pdp-btn--outline-maroon" id="pdp-write-review">Write a review</button>
+          <?php else: ?>
+            <span class="pdp-review-gate">Only verified buyers can review</span>
+          <?php endif; ?>
         </div>
       </div>
 
+      <?php if ($cu && $has_purchased && !$existing_review): ?>
       <form class="pdp-review-form" id="pdp-review-form" enctype="multipart/form-data" hidden>
         <input type="hidden" name="product_id" value="<?= (int)$p['id'] ?>"/>
+        <div class="pdp-review-form__head">
+          <span class="pdp-verified-badge"><span class="material-symbols-outlined">verified</span> Verified Purchase</span>
+          <span class="pdp-review-form__as">Posting as <strong><?= e($cu['name']) ?></strong></span>
+        </div>
         <div class="pdp-review-form__rating" data-rating="5">
           <?php for ($i=1;$i<=5;$i++): ?><span class="pdp-star is-on" data-val="<?= $i ?>">★</span><?php endfor; ?>
           <input type="hidden" name="rating" value="5"/>
         </div>
-        <input type="text" name="name" placeholder="Your name *" required/>
-        <input type="email" name="email" placeholder="Email (optional)"/>
-        <input type="text" name="title" placeholder="Review title"/>
-        <textarea name="body" rows="4" placeholder="Share your experience…*" required></textarea>
-        <label class="pdp-file"><span class="material-symbols-outlined">image</span> Add photo
-          <input type="file" name="image" accept="image/*"/>
+        <input type="text" name="title" placeholder="Review title (optional)"/>
+        <textarea name="body" rows="4" placeholder="Share your experience…*" required minlength="10"></textarea>
+        <label class="pdp-file"><span class="material-symbols-outlined">image</span> Add photos (up to 4)
+          <input type="file" name="images[]" accept="image/*" multiple/>
         </label>
         <div class="pdp-review-form__actions">
           <button type="button" class="pdp-btn pdp-btn--ghost" id="pdp-review-cancel">Cancel</button>
           <button type="submit" class="pdp-btn pdp-btn--dark">Submit Review</button>
         </div>
       </form>
+      <?php endif; ?>
 
       <div class="pdp-reviews__sort">
         <label>Most Recent ▾</label>
@@ -385,18 +412,30 @@ include 'includes/header.php';
               <div class="pdp-stars">
                 <?php for ($i=1;$i<=5;$i++): ?><span class="pdp-star<?= $i <= (int)$rv['rating'] ? ' is-on' : '' ?>">★</span><?php endfor; ?>
               </div>
-              <span class="pdp-review__date"><?= e(date('m/d/Y', strtotime($rv['created_at']))) ?></span>
+              <span class="pdp-review__date"><?= e(date('M j, Y', strtotime($rv['created_at']))) ?></span>
             </div>
             <div class="pdp-review__user">
-              <span class="pdp-review__avatar"><span class="material-symbols-outlined">person</span></span>
-              <strong><?= e($rv['name']) ?></strong>
+              <span class="pdp-review__avatar pdp-review__avatar--initials"><?= e(user_initials($rv['name'])) ?></span>
+              <div class="pdp-review__user-meta">
+                <strong><?= e($rv['name']) ?></strong>
+                <?php if (!empty($rv['verified'])): ?>
+                  <span class="pdp-verified-badge pdp-verified-badge--sm"><span class="material-symbols-outlined">verified</span> Verified Purchase</span>
+                <?php endif; ?>
+              </div>
             </div>
-            <?php if ($rv['title']): ?><h4 class="pdp-review__title"><?= e($rv['title']) ?></h4><?php endif; ?>
+            <?php if (!empty($rv['title'])): ?><h4 class="pdp-review__title"><?= e($rv['title']) ?></h4><?php endif; ?>
             <p class="pdp-review__body"><?= nl2br(e($rv['body'])) ?></p>
-            <?php if ($rv['image']): ?>
-              <a href="<?= e(UPLOAD_URL . '/reviews/' . $rv['image']) ?>" target="_blank" class="pdp-review__photo">
-                <img src="<?= e(UPLOAD_URL . '/reviews/' . $rv['image']) ?>" alt=""/>
-              </a>
+            <?php
+              $imgs = !empty($rv['images']) ? $rv['images'] : ([] + (!empty($rv['image']) ? [$rv['image']] : []));
+              if ($imgs):
+            ?>
+              <div class="pdp-review__photos">
+                <?php foreach ($imgs as $im): ?>
+                  <a href="<?= e(UPLOAD_URL . '/reviews/' . $im) ?>" target="_blank" class="pdp-review__photo">
+                    <img src="<?= e(UPLOAD_URL . '/reviews/' . $im) ?>" alt=""/>
+                  </a>
+                <?php endforeach; ?>
+              </div>
             <?php endif; ?>
           </article>
         <?php endforeach; endif; ?>
@@ -494,12 +533,23 @@ include 'includes/header.php';
   if (reviewForm) reviewForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const fd = new FormData(reviewForm);
+    const submitBtn = reviewForm.querySelector('button[type="submit"]');
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.dataset.t = submitBtn.textContent; submitBtn.textContent = 'Submitting…'; }
     try {
       const r = await fetch(SITE_URL + '/ajax/review.php', { method:'POST', body: fd, credentials:'same-origin' });
       const d = await r.json();
+      if (d.login_required) {
+        window.TBToast?.show(d.msg || 'Please login', 'info');
+        setTimeout(() => { location.href = d.login_url || (SITE_URL + '/login.php'); }, 700);
+        return;
+      }
       window.TBToast?.show(d.msg, d.ok ? 'success' : 'error');
       if (d.ok) setTimeout(() => location.reload(), 900);
-    } catch(err) { window.TBToast?.show('Could not submit review', 'error'); }
+    } catch(err) {
+      window.TBToast?.show('Could not submit review', 'error');
+    } finally {
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = submitBtn.dataset.t || 'Submit Review'; }
+    }
   });
 })();
 </script>

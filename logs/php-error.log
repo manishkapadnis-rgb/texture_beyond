@@ -1,0 +1,36 @@
+[28-May-2026 23:43:57 Asia/Kolkata] PHP Fatal error:  Uncaught mysqli_sql_exception: No connection could be made because the target machine actively refused it in E:\free-claude-code\texure\texture_beyond\config\database.php:3
+Stack trace:
+#0 E:\free-claude-code\texure\texture_beyond\config\database.php(3): mysqli->__construct('localhost', 'u663620806_text...', Object(SensitiveParameterValue), 'u663620806_text...')
+#1 E:\free-claude-code\texure\texture_beyond\config\config.php(64): require_once('E:\\free-claude-...')
+#2 E:\free-claude-code\texure\texture_beyond\includes\config.php(3): require_once('E:\\free-claude-...')
+#3 E:\free-claude-code\texure\texture_beyond\includes\functions.php(2): require_once('E:\\free-claude-...')
+#4 Command line code(4): require('E:\\free-claude-...')
+#5 {main}
+  thrown in E:\free-claude-code\texure\texture_beyond\config\database.php on line 3
+[28-May-2026 23:44:09 Asia/Kolkata] PHP Fatal error:  Uncaught mysqli_sql_exception: No connection could be made because the target machine actively refused it in E:\free-claude-code\texure\texture_beyond\config\database.php:3
+Stack trace:
+#0 E:\free-claude-code\texure\texture_beyond\config\database.php(3): mysqli->__construct('localhost', 'u663620806_text...', Object(SensitiveParameterValue), 'u663620806_text...')
+#1 E:\free-claude-code\texure\texture_beyond\config\config.php(64): require_once('E:\\free-claude-...')
+#2 E:\free-claude-code\texure\texture_beyond\includes\config.php(3): require_once('E:\\free-claude-...')
+#3 E:\free-claude-code\texure\texture_beyond\includes\functions.php(2): require_once('E:\\free-claude-...')
+#4 Command line code(3): require('E:\\free-claude-...')
+#5 {main}
+  thrown in E:\free-claude-code\texure\texture_beyond\config\database.php on line 3
+[28-May-2026 23:44:22 Asia/Kolkata] PHP Fatal error:  Uncaught mysqli_sql_exception: No connection could be made because the target machine actively refused it in E:\free-claude-code\texure\texture_beyond\config\database.php:3
+Stack trace:
+#0 E:\free-claude-code\texure\texture_beyond\config\database.php(3): mysqli->__construct('localhost', 'u663620806_text...', Object(SensitiveParameterValue), 'u663620806_text...')
+#1 E:\free-claude-code\texure\texture_beyond\config\config.php(64): require_once('E:\\free-claude-...')
+#2 E:\free-claude-code\texure\texture_beyond\includes\config.php(3): require_once('E:\\free-claude-...')
+#3 E:\free-claude-code\texure\texture_beyond\includes\functions.php(2): require_once('E:\\free-claude-...')
+#4 Command line code(1): require('E:\\free-claude-...')
+#5 {main}
+  thrown in E:\free-claude-code\texure\texture_beyond\config\database.php on line 3
+[28-May-2026 23:44:32 Asia/Kolkata] PHP Fatal error:  Uncaught mysqli_sql_exception: No connection could be made because the target machine actively refused it in E:\free-claude-code\texure\texture_beyond\config\database.php:3
+Stack trace:
+#0 E:\free-claude-code\texure\texture_beyond\config\database.php(3): mysqli->__construct('localhost', 'u663620806_text...', Object(SensitiveParameterValue), 'u663620806_text...')
+#1 E:\free-claude-code\texure\texture_beyond\config\config.php(64): require_once('E:\\free-claude-...')
+#2 E:\free-claude-code\texure\texture_beyond\includes\config.php(3): require_once('E:\\free-claude-...')
+#3 E:\free-claude-code\texure\texture_beyond\includes\functions.php(2): require_once('E:\\free-claude-...')
+#4 Command line code(1): require('E:\\free-claude-...')
+#5 {main}
+  thrown in E:\free-claude-code\texure\texture_beyond\config\database.php on line 3

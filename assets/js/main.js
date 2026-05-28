@@ -236,6 +236,11 @@
       setBtnLoading(btn, true);
       try {
         const data = await request({ action: 'add', id, qty: qty || 1 });
+        if (data && data.login_required) {
+          Toast.show(data.msg || 'Please login to continue.', 'info');
+          setTimeout(() => { location.href = data.login_url; }, 700);
+          return;
+        }
         applyState(data);
         Toast.show(data.msg || 'Product added to cart', data.ok ? 'success' : 'error');
         pulseBadge();

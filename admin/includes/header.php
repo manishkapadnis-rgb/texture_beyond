@@ -40,6 +40,7 @@ th{background:#f8ecdf;font-size:11px;letter-spacing:.15em;text-transform:upperca
         'products.php'=>['inventory_2','Products'],
         'categories.php'=>['category','Categories'],
         'orders.php'=>['receipt_long','Orders'],
+        'reviews.php'=>['reviews','Reviews'],
         'coupons.php'=>['local_offer','Coupons'],
         'users.php'=>['group','Users'],
         'enquiries.php'=>['forum','Enquiries'],
