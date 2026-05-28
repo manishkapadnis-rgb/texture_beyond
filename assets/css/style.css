@@ -340,3 +340,27 @@ button:focus-visible, a:focus-visible{outline:1px solid #c5a059;outline-offset:4
 .pdp-review__photo{display:inline-block;width:80px;height:80px;border-radius:6px;overflow:hidden;border:1px solid rgba(0,0,0,.1)}
 .pdp-review__photo img{width:100%;height:100%;object-fit:cover}
 
+
+/* Mobile responsiveness — product card + grid polish */
+.line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tb-card{display:flex;flex-direction:column}
+.tb-card .btn-primary{min-height:40px}
+@media (max-width:480px){
+  .tb-card{padding:10px;border-radius:12px}
+  .tb-card h3{font-size:14px;line-height:1.25}
+  .tb-card .btn-primary{font-size:10px;padding:8px 10px;letter-spacing:.04em}
+  .pdp{padding:20px 14px}
+  .pdp-title{font-size:18px}
+  .pdp-price__sale{font-size:19px}
+}
+@media (max-width:375px){
+  .tb-card{padding:8px;gap:0}
+  .tb-card h3{font-size:13px}
+  .tb-card .btn-primary{padding:8px 6px;font-size:9.5px}
+  .tb-card a.font-label-caps{font-size:9.5px}
+}
+@media (max-width:320px){
+  .tb-card{padding:7px}
+  .tb-card h3{font-size:12px}
+  .tb-card .btn-primary{font-size:9px;padding:7px 4px}
+}

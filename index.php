@@ -62,7 +62,7 @@ include 'includes/header.php';
       <span class="font-label-caps text-label-caps text-secondary mb-4 block">Signature Pieces</span>
       <h2 class="font-display-md text-headline-lg md:text-display-md">Featured Works</h2>
     </div>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-gutter gsap-stagger">
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-gutter gsap-stagger">
       <?php while ($p = $featured->fetch_assoc()): include 'components/product-card.php'; endwhile; ?>
     </div>
   </div>

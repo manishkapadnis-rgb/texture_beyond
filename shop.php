@@ -44,7 +44,7 @@ include 'includes/header.php';
       </form>
     </div>
 
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-gutter gsap-stagger">
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5 md:gap-gutter gsap-stagger">
       <?php while ($p = $res->fetch_assoc()): include 'components/product-card.php'; endwhile; ?>
       <?php if ($res->num_rows === 0): ?>
         <p class="col-span-full text-center font-body-lg text-on-surface-variant py-20">No works found.</p>

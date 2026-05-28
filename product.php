@@ -1,4 +1,9 @@
 <?php
+// Surface PHP errors to the log so 500s are diagnosable, but never display.
+@ini_set('display_errors', '0');
+@ini_set('log_errors', '1');
+error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING & ~E_DEPRECATED);
+
 require_once 'includes/functions.php';
 
 // Self-healing fallbacks so PDP works even if functions.php / reviews
@@ -91,24 +96,54 @@ if (!function_exists('user_initials')) {
   KEY (`product_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
-$slug = $_GET['slug'] ?? '';
+$slug = trim((string)($_GET['slug'] ?? ''));
+if ($slug === '') { http_response_code(404); echo 'Not Found'; exit; }
 $stmt = $conn->prepare("SELECT p.*, c.name AS category_name, c.slug AS category_slug FROM products p LEFT JOIN categories c ON c.id=p.category_id WHERE p.slug=? AND p.status=1");
-$stmt->bind_param('s', $slug); $stmt->execute();
-$p = $stmt->get_result()->fetch_assoc();
+$p = null;
+if ($stmt) { $stmt->bind_param('s', $slug); $stmt->execute(); $p = $stmt->get_result()->fetch_assoc(); }
 if (!$p){ http_response_code(404); echo 'Not Found'; exit; }
-$page_title = ($p['meta_title'] ?: $p['name']) . ' | Texture & Beyond';
+
+// Normalize possibly-missing columns to safe defaults so the template never
+// hits "undefined index" or null-method fatals on older DB schemas.
+$p['meta_title']        = $p['meta_title']        ?? '';
+$p['meta_description']  = $p['meta_description']  ?? '';
+$p['short_description'] = $p['short_description'] ?? '';
+$p['description']       = $p['description']       ?? '';
+$p['dimensions']        = $p['dimensions']        ?? '';
+$p['material']          = $p['material']          ?? '';
+$p['sale_price']        = $p['sale_price']        ?? null;
+$p['gallery']           = $p['gallery']           ?? '';
+$p['image']             = $p['image']             ?? '';
+$p['category_name']     = $p['category_name']     ?? '';
+$p['category_slug']     = $p['category_slug']     ?? '';
+$p['stock']             = (int)($p['stock']       ?? 0);
+$p['category_id']       = (int)($p['category_id'] ?? 0);
+
+$page_title       = (($p['meta_title'] ?: $p['name']) ?: 'Product') . ' | Texture & Beyond';
 $meta_description = $p['meta_description'] ?: $p['short_description'];
-$related = $conn->query("SELECT * FROM products WHERE status=1 AND category_id={$p['category_id']} AND id<>{$p['id']} LIMIT 4");
-if (function_exists('ensure_review_tables')) ensure_review_tables();
-$gallery  = product_gallery($p);
-$sizes    = product_sizes($p['id']);
-$reviews  = product_reviews($p['id']);
-$rsum     = review_summary($p['id']);
-$cu       = current_user();
-$has_purchased = $cu ? user_purchased_product($cu['id'], $p['id']) : null;
-$existing_review = $cu ? user_review_for($cu['id'], $p['id']) : null;
-$return_url = url('product.php?slug=' . $p['slug']);
-$sold_recent = 4 + (abs(crc32((string)$p['slug'])) % 14);
+$related = @$conn->query("SELECT * FROM products WHERE status=1 AND category_id={$p['category_id']} AND id<>{$p['id']} LIMIT 4");
+if (function_exists('ensure_review_tables')) { try { ensure_review_tables(); } catch (\Throwable $e) { error_log('PDP ensure_review_tables: ' . $e->getMessage()); } }
+
+// All helper calls below are wrapped so a buggy helper cannot 500 the PDP.
+$call = function(callable $fn, $default) {
+    try { return $fn(); } catch (\Throwable $e) { error_log('PDP helper: ' . $e->getMessage()); return $default; }
+};
+$gallery = $call(fn() => function_exists('product_gallery') ? product_gallery($p) : [], []);
+if (!is_array($gallery) || empty($gallery)) $gallery = [product_image($p['image'])];
+$sizes   = $call(fn() => function_exists('product_sizes')   ? product_sizes($p['id'])   : [], []);
+$reviews = $call(fn() => function_exists('product_reviews') ? product_reviews($p['id']) : [], []);
+$rsum    = $call(fn() => function_exists('review_summary')  ? review_summary($p['id'])  : null, null);
+if (!is_array($rsum)) $rsum = ['count'=>0,'avg'=>0,'breakdown'=>[5=>0,4=>0,3=>0,2=>0,1=>0]];
+$rsum['count']     = (int)($rsum['count'] ?? 0);
+$rsum['avg']       = (float)($rsum['avg'] ?? 0);
+$rsum['breakdown'] = is_array($rsum['breakdown'] ?? null) ? $rsum['breakdown'] : [];
+foreach ([5,4,3,2,1] as $k) { $rsum['breakdown'][$k] = (int)($rsum['breakdown'][$k] ?? 0); }
+
+$cu              = function_exists('current_user') ? $call(fn() => current_user(), null) : null;
+$has_purchased   = ($cu && function_exists('user_purchased_product')) ? $call(fn() => user_purchased_product($cu['id'], $p['id']), null) : null;
+$existing_review = ($cu && function_exists('user_review_for'))        ? $call(fn() => user_review_for($cu['id'], $p['id']),        null) : null;
+$return_url      = url('product.php?slug=' . $p['slug']);
+$sold_recent     = 4 + (abs(crc32((string)$p['slug'])) % 14);
 include 'includes/header.php';
 ?>
 <style>
@@ -398,7 +433,7 @@ include 'includes/header.php';
           <?php elseif ($has_purchased): ?>
             <button type="button" class="pdp-btn pdp-btn--outline-maroon" id="pdp-write-review">Write a review</button>
           <?php else: ?>
-            <span class="pdp-review-gate">Only verified buyers can review</span>
+            <span class="pdp-review-gate">Only customers who purchased this product can review</span>
           <?php endif; ?>
         </div>
       </div>
@@ -453,8 +488,14 @@ include 'includes/header.php';
             <?php if (!empty($rv['title'])): ?><h4 class="pdp-review__title"><?= e($rv['title']) ?></h4><?php endif; ?>
             <p class="pdp-review__body"><?= nl2br(e($rv['body'])) ?></p>
             <?php
-              $imgs = !empty($rv['images']) ? $rv['images'] : ([] + (!empty($rv['image']) ? [$rv['image']] : []));
-              if ($imgs):
+              $imgs = [];
+              if (!empty($rv['images'])) {
+                  $imgs = is_array($rv['images']) ? $rv['images'] : preg_split('/[,\n]+/', (string)$rv['images']);
+                  $imgs = array_values(array_filter(array_map('trim', $imgs)));
+              } elseif (!empty($rv['image'])) {
+                  $imgs = [$rv['image']];
+              }
+              if (!empty($imgs)):
             ?>
               <div class="pdp-review__photos">
                 <?php foreach ($imgs as $im): ?>
@@ -469,7 +510,7 @@ include 'includes/header.php';
       </div>
     </section>
 
-    <?php if ($related->num_rows): ?>
+    <?php if ($related && $related->num_rows): ?>
     <div class="mt-section-gap">
       <h2 class="font-display-md text-headline-lg mb-12 text-center">You May Also Love</h2>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-gutter">

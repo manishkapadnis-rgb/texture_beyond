@@ -6,24 +6,7 @@ $is_ajax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HT
     || strpos($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') !== false
     || !empty($_REQUEST['ajax']);
 
-// Auth gate — Add to Cart and Buy It Now require an account.
-$requires_auth = in_array($action, ['add', 'update', 'remove'], true);
-if ($requires_auth && !is_logged_in()) {
-    $return_url = $_POST['redirect'] ?? $_SERVER['HTTP_REFERER'] ?? url('cart.php');
-    $login_url  = url('login.php?return=' . urlencode($return_url));
-    if ($is_ajax) {
-        header('Content-Type: application/json');
-        echo json_encode([
-            'ok' => false,
-            'login_required' => true,
-            'msg' => 'Please login to continue.',
-            'login_url' => $login_url,
-        ]);
-        exit;
-    }
-    redirect($login_url);
-}
-
+// Guest carts allowed — account is created at checkout, not on add.
 $response = ['ok' => true, 'msg' => ''];
 
 switch ($action) {

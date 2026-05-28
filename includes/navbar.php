@@ -10,7 +10,7 @@ if (!$menu) $menu = [
 $logo = logo_url();
 ?>
 <nav class="fixed top-0 w-full z-50 glass-nav shadow-sm">
-  <div class="flex justify-between items-center px-margin-mobile md:px-margin-desktop py-6 max-w-container-max mx-auto">
+  <div class="flex justify-between items-center px-4 sm:px-margin-mobile md:px-margin-desktop py-3 sm:py-4 md:py-6 max-w-container-max mx-auto gap-3">
     <a href="<?= url('index.php') ?>" class="flex items-center gap-3">
       <?php if ($logo): ?>
         <img src="<?= e($logo) ?>" alt="<?= e(SITE_NAME) ?>" class="h-10"/>
@@ -26,7 +26,7 @@ $logo = logo_url();
         </a>
       <?php endforeach; ?>
     </div>
-    <div class="flex items-center gap-5">
+    <div class="flex items-center gap-3 sm:gap-4 md:gap-5 text-[22px] sm:text-[24px]">
       <a href="<?= url('shop.php') ?>" class="material-symbols-outlined text-primary hover:opacity-80">search</a>
       <?php if (is_logged_in()): ?>
         <a href="<?= url('wishlist.php') ?>" class="relative material-symbols-outlined text-primary hover:opacity-80">favorite

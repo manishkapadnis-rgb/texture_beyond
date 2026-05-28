@@ -234,6 +234,9 @@
     }
     async function add(id, qty, btn) {
       setBtnLoading(btn, true);
+      // Open drawer immediately for snappy Shopify-style feedback;
+      // content updates when the AJAX response arrives.
+      open();
       try {
         const data = await request({ action: 'add', id, qty: qty || 1 });
         if (data && data.login_required) {
@@ -244,7 +247,6 @@
         applyState(data);
         Toast.show(data.msg || 'Product added to cart', data.ok ? 'success' : 'error');
         pulseBadge();
-        open();
       } catch (e) {
         Toast.show('Could not add to cart. Please try again.', 'error');
       } finally { setBtnLoading(btn, false); }
