@@ -19,11 +19,11 @@
       <?php endif; ?>
     </div>
   </a>
-  <form action="<?= url('cart-action.php') ?>" method="post" class="add-to-cart-form flex items-center justify-between gap-3" data-product-id="<?= (int)$p['id'] ?>">
+  <form action="<?= url('cart-action.php') ?>" method="post" class="add-to-cart-form flex items-center justify-between gap-2 sm:gap-3" data-product-id="<?= (int)$p['id'] ?>">
     <input type="hidden" name="action" value="add"/>
     <input type="hidden" name="id" value="<?= (int)$p['id'] ?>"/>
     <input type="hidden" name="qty" value="1"/>
-    <button type="submit" class="btn-primary text-[11px] px-4 py-3 flex-1">Add to cart</button>
-    <a href="<?= url('product.php?slug=' . $p['slug']) ?>" class="font-label-caps text-label-caps hover:text-secondary">Details</a>
+    <button type="submit" class="btn-primary text-[11px] px-2 sm:px-4 py-3 flex-1 whitespace-nowrap">Add to cart</button>
+    <a href="<?= url('product.php?slug=' . $p['slug']) ?>" class="font-label-caps text-label-caps hover:text-secondary whitespace-nowrap">Details</a>
   </form>
 </div>

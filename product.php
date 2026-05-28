@@ -48,6 +48,33 @@ if (!function_exists('review_summary')) {
         return $sum;
     }
 }
+if (!function_exists('user_purchased_product')) {
+    function user_purchased_product($uid, $pid){
+        global $conn; $uid=(int)$uid; $pid=(int)$pid;
+        if (!$uid || !$pid) return null;
+        $r = @$conn->query("SELECT o.id FROM orders o INNER JOIN order_items oi ON oi.order_id=o.id WHERE o.user_id=$uid AND oi.product_id=$pid AND o.status IN ('processing','shipped','delivered') ORDER BY o.id DESC LIMIT 1");
+        if ($r && $row = $r->fetch_assoc()) return (int)$row['id'];
+        return null;
+    }
+}
+if (!function_exists('user_review_for')) {
+    function user_review_for($uid, $pid){
+        global $conn; $uid=(int)$uid; $pid=(int)$pid;
+        if (!$uid || !$pid) return null;
+        $r = @$conn->query("SELECT * FROM reviews WHERE user_id=$uid AND product_id=$pid LIMIT 1");
+        return $r ? $r->fetch_assoc() : null;
+    }
+}
+if (!function_exists('user_initials')) {
+    function user_initials($name){
+        $name = trim((string)$name);
+        if ($name === '') return '?';
+        $parts = preg_split('/\s+/', $name);
+        $s = strtoupper(substr($parts[0], 0, 1));
+        if (isset($parts[1])) $s .= strtoupper(substr($parts[1], 0, 1));
+        return $s;
+    }
+}
 // Auto-create reviews table on first run so the migration is optional
 @$conn->query("CREATE TABLE IF NOT EXISTS `reviews` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
