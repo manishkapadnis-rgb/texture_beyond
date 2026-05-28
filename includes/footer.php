@@ -62,6 +62,27 @@ $s = setting();
   </div>
 </footer>
 
+<div id="cart-overlay" class="cart-overlay" aria-hidden="true"></div>
+<aside id="mini-cart-drawer" class="mini-cart-drawer" aria-label="Shopping cart drawer" aria-hidden="true">
+  <div class="mini-cart-header">
+    <div>
+      <p class="font-label-caps text-label-caps text-secondary">Your Cart</p>
+      <h3 class="font-display-md text-headline-md">Shopping Bag</h3>
+    </div>
+    <button type="button" id="close-cart-drawer" class="material-symbols-outlined text-primary" aria-label="Close cart">close</button>
+  </div>
+  <div id="mini-cart-items" class="mini-cart-items custom-scrollbar"></div>
+  <div class="mini-cart-footer">
+    <div class="flex items-center justify-between text-on-surface-variant mb-3"><span>Subtotal</span><strong id="mini-cart-subtotal">₹0</strong></div>
+    <div class="flex gap-3">
+      <a href="<?= url('cart.php') ?>" class="btn-ghost flex-1 text-center">View Cart</a>
+      <a href="<?= url('checkout.php') ?>" class="btn-primary flex-1 text-center">Checkout</a>
+    </div>
+  </div>
+</aside>
+
+<div id="toast-stack" class="toast-stack" aria-live="polite" aria-atomic="true"></div>
+
 <script src="<?= ASSETS_URL ?>/js/main.js"></script>
 </body>
 </html>

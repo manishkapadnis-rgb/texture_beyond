@@ -36,8 +36,8 @@ $logo = logo_url();
       <?php else: ?>
         <a href="<?= url('login.php') ?>" class="material-symbols-outlined text-primary hover:opacity-80">person_outline</a>
       <?php endif; ?>
-      <a href="<?= url('cart.php') ?>" class="relative material-symbols-outlined text-primary hover:opacity-80">shopping_bag
-        <?php if (cart_count() > 0): ?><span class="absolute -top-2 -right-2 bg-primary text-on-primary text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold"><?= cart_count() ?></span><?php endif; ?>
+      <a href="<?= url('cart.php') ?>" id="cart-toggle" class="relative material-symbols-outlined text-primary hover:opacity-80" data-open-cart>shopping_bag
+        <span id="cart-count-badge" class="absolute -top-2 -right-2 bg-primary text-on-primary text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold<?= cart_count() > 0 ? '' : ' hidden' ?>"><?= cart_count() ?></span>
       </a>
       <button class="md:hidden material-symbols-outlined text-primary" onclick="document.getElementById('mobile-menu').classList.toggle('hidden')">menu</button>
     </div>
